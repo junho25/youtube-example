@@ -3,8 +3,12 @@ package co.kr.ghdlwnsgh.example_youtube
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import co.kr.ghdlwnsgh.example_youtube.adapter.VideoAdapter
 import co.kr.ghdlwnsgh.example_youtube.dto.VideoDto
 import co.kr.ghdlwnsgh.example_youtube.service.VideoService
+import com.google.gson.GsonBuilder
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -12,19 +16,35 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var videoAdapter: VideoAdapter
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         supportFragmentManager.beginTransaction()
             .replace(R.id.main_frame, PlayerFragment())
             .commit()
+        videoAdapter = VideoAdapter(callback = { url, title ->
+            supportFragmentManager.fragments.find { it is PlayerFragment }?.let {
+                (it as PlayerFragment).play(url, title)
+            }
+        })
+        findViewById<RecyclerView>(R.id.main_recycler).apply {
+            adapter = videoAdapter
+            layoutManager = LinearLayoutManager(context)
+        }
+
         getVideoList()
     }
 
     private fun getVideoList() {
+        val gson = GsonBuilder()
+            .setLenient()
+            .create()
         val retrofit = Retrofit.Builder()
             .baseUrl("https://run.mocky.io/")
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
         retrofit.create(VideoService::class.java).also {
             it.listVideos()
@@ -34,8 +54,9 @@ class MainActivity : AppCompatActivity() {
                             Log.d("MainActivity", "fail")
                             return
                         }
-                        response.body()?.let {
-                            Log.d("MainActivity", it.toString())
+                        response.body()?.let { videoDto ->
+                            Log.d("MainActivity", videoDto.toString())
+                            videoAdapter.submitList(videoDto.videos)
                         }
                     }
 

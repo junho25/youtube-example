@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.motion.widget.MotionLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<co.kr.ghdlwnsgh.example_youtube.CustomMotionLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/playerMotionLayout"
     android:layout_width="match_parent"
@@ -15,7 +15,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <ImageView
+    <Player
         android:id="@+id/player_view"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -50,8 +50,11 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="@color/white"
+        android:nestedScrollingEnabled="false"
+        android:padding="16dp"
+        android:clipToPadding="false"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/main_container_layout" />
-</androidx.constraintlayout.motion.widget.MotionLayout>
+</co.kr.ghdlwnsgh.example_youtube.CustomMotionLayout>
