@@ -3,6 +3,7 @@ package co.kr.ghdlwnsgh.example_youtube
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import co.kr.ghdlwnsgh.example_youtube.adapter.VideoAdapter
@@ -18,6 +19,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 class MainActivity : AppCompatActivity() {
 
     private lateinit var videoAdapter: VideoAdapter
+    private var isFirstStart = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,6 +29,10 @@ class MainActivity : AppCompatActivity() {
             .commit()
         videoAdapter = VideoAdapter(callback = { url, title ->
             supportFragmentManager.fragments.find { it is PlayerFragment }?.let {
+                if (!isFirstStart) {
+                    (it as PlayerFragment).setVisibleMiniPlayer()
+                    isFirstStart = true
+                }
                 (it as PlayerFragment).play(url, title)
             }
         })

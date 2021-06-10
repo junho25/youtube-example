@@ -1,5 +1,6 @@
 package co.kr.ghdlwnsgh.example_youtube
 
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -10,6 +11,11 @@ import co.kr.ghdlwnsgh.example_youtube.adapter.VideoAdapter
 import co.kr.ghdlwnsgh.example_youtube.databinding.FragmentPlayerBinding
 import co.kr.ghdlwnsgh.example_youtube.dto.VideoDto
 import co.kr.ghdlwnsgh.example_youtube.service.VideoService
+import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.source.ProgressiveMediaSource
+import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.gson.GsonBuilder
 import retrofit2.Call
 import retrofit2.Callback
@@ -22,6 +28,8 @@ class PlayerFragment: Fragment(R.layout.fragment_player) {
 
     private var binding : FragmentPlayerBinding? = null
     private lateinit var videoAdapter: VideoAdapter
+    private var player: SimpleExoPlayer? = null
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -29,6 +37,9 @@ class PlayerFragment: Fragment(R.layout.fragment_player) {
         binding = fragmentPlayerBinding
         initMotionLayoutEvent(fragmentPlayerBinding)
         initRecyclerView(fragmentPlayerBinding)
+        initPlayer(fragmentPlayerBinding)
+        initControlButton(fragmentPlayerBinding)
+
         getVideoList()
     }
 
@@ -98,15 +109,68 @@ class PlayerFragment: Fragment(R.layout.fragment_player) {
         }
     }
 
+    private fun initPlayer(fragmentPlayerBinding: FragmentPlayerBinding) {
+        context?.let {
+            player = SimpleExoPlayer.Builder(it).build()
+        }
+        fragmentPlayerBinding.playerView.player = player
+        binding?.let {
+            player?.addListener(object : Player.EventListener{
+                override fun onIsPlayingChanged(isPlaying: Boolean) {
+                    super.onIsPlayingChanged(isPlaying)
+                    if (isPlaying) {
+                        it.bottomPlayerControlBtn.setImageResource(R.drawable.ic_baseline_pause_24)
+                        it.playerView.hideController()
+                    } else {
+                        it.bottomPlayerControlBtn.setImageResource(R.drawable.ic_baseline_play_arrow_24)
+                    }
+                }
+            })
+        }
+
+    }
+
+    private fun initControlButton(fragmentPlayerBinding: FragmentPlayerBinding) {
+        fragmentPlayerBinding.bottomPlayerControlBtn.setOnClickListener {
+            val player = this.player ?: return@setOnClickListener
+            if (player.isPlaying) {
+                player.pause()
+            } else {
+                player.play()
+            }
+        }
+    }
+
     fun play(url: String, title: String) {
+        context?.let {
+            val datasourceFactory = DefaultDataSourceFactory(it)
+            val mediaSource = ProgressiveMediaSource.Factory(datasourceFactory)
+                .createMediaSource(MediaItem.fromUri(Uri.parse(url)))
+            player?.setMediaSource(mediaSource)
+            player?.prepare()
+            player?.play()
+        }
+
         binding?.let {
             it.playerMotionLayout.transitionToEnd()
             it.textView.text = title
         }
     }
 
+    fun setVisibleMiniPlayer() {
+        binding?.let {
+            it.playerMotionLayout.visibility = View.VISIBLE
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        player?.pause()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         binding = null
+        player?.release()
     }
 }
